@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whisper AI - Voice ChatGPT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #212121;
+      --bg-card: #2f2f2f;
+      --bg-card-hover: #383838;
+      --bg-input: #2f2f2f;
+      --text-main: #ececec;
+      --text-muted: #b4b4b4;
+      --accent-green: #10a37f;
+      --accent-green-hover: #1a7f64;
+      --accent-red: #ef4444;
+      --border-color: #383838;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navbar */
+    .top-navbar {
+      height: 56px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .brand svg {
+      width: 26px;
+      height: 26px;
+      fill: var(--accent-green);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .new-chat-btn:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e3a2f;
+      color: #6ee7b7;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+    }
+
+    /* Main Container */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 56px);
+      position: relative;
+    }
+
+    /* Chat Messages View */
+    .chat-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      scroll-behavior: smooth;
+    }
+
+    .chat-view-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Hero / Empty State */
+    .hero-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin: auto 0;
+      padding: 40px 20px;
+      gap: 16px;
+    }
+
+    .hero-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+      color: var(--accent-green);
+    }
+
+    .hero-title {
+      font-size: 1.7rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    /* Message Bubbles */
+    .message-row {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .message-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .avatar-user {
+      background: #6366f1;
+      color: white;
+    }
+
+    .avatar-whisper {
+      background: var(--accent-green);
+      color: white;
+    }
+
+    .message-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .message-role {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .message-bubble {
+      background: var(--bg-card);
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .message-user-bubble {
+      background: #2b3040;
+      border-color: #3f4760;
+    }
+
+    .lang-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: #1e3a2f;
+      color: #6ee7b7;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    /* Bottom Input Bar - Full Width Minimalist */
+    .input-wrapper {
+      padding: 14px 24px 28px;
+      background: linear-gradient(180deg, transparent 0%, var(--bg-main) 30%);
+    }
+
+    .input-bar-container {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .input-bar {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 8px 10px 8px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .input-bar:focus-within {
+      border-color: #666;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+      margin-bottom: 2px;
+    }
+
+    .icon-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .textarea-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 36px;
+    }
+
+    .chat-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      max-height: 160px;
+      min-height: 24px;
+      padding: 6px 0;
+      overflow-y: auto;
+    }
+
+    .chat-input::placeholder {
+      color: #888;
+    }
+
+    /* Recording Badge overlay when mic is active */
+    .recording-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    .recording-pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      animation: blink 1s infinite alternate;
+    }
+
+    @keyframes blink {
+      from { opacity: 0.3; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1.15); }
+    }
+
+    .recording-text {
+      color: #ef4444;
+      font-size: 0.95rem;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .recording-timer {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    /* Mic button */
+    .mic-button {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+      flex-shrink: 0;
+      margin-bottom: 1px;
+    }
+
+    .mic-button:hover {
+      transform: scale(1.06);
+      background: var(--accent-green-hover);
+    }
+
+    .mic-button.recording {
+      background: var(--accent-red);
+      animation: pulse-ring 1.2s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+      }
+      70% {
+        box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
+    }
+
+    /* Send button */
+    .send-button {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--text-main);
+      border: none;
+      color: #171717;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-bottom: 1px;
+    }
+
+    .send-button:disabled {
+      background: #424242;
+      color: #777;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .send-button:not(:disabled):hover {
+      background: white;
+      transform: scale(1.06);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Clean Top Navbar -->
+  <header class="top-navbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+        <circle cx="12" cy="12" r="5"/>
+      </svg>
+      <span>Whisper AI</span>
+    </div>
+
+    <div class="nav-actions">
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Chat
+      </button>
+
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Auto Detect Ready
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main class="main-container">
+
+    <!-- Chat Messages View -->
+    <div class="chat-view" id="chatView">
+      <div class="chat-view-inner" id="chatInner">
+
+        <!-- Minimalist Hero State -->
+        <div class="hero-state" id="heroState">
+          <div class="hero-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </div>
+          <h2 class="hero-title">What would you like to speak?</h2>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Input Bar -->
+    <div class="input-wrapper">
+      <div class="input-bar-container">
+        <div class="input-bar">
+          
+          <input type="file" id="fileInput" accept="audio/*" class="hidden">
+          <button class="icon-btn" id="uploadBtn" title="Attach audio file">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
+
+          <!-- Textarea & Recording Indicator -->
+          <div class="textarea-container">
+            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message or click mic to speak in English, Gujarati, Hindi..."></textarea>
+            
+            <div id="recordingOverlay" class="recording-overlay hidden">
+              <span class="recording-pulse-dot"></span>
+              <span class="recording-text" id="recordingOverlayText">🔴 Listening... Speak now! (Click mic when done)</span>
+              <span class="recording-timer" id="recordingTimer">00:00</span>
+            </div>
+          </div>
+
+          <!-- Mic button -->
+          <button class="mic-button" id="micBtn" title="Click to speak">
+            <svg id="micIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            <div id="loadingSpinner" class="spinner hidden"></div>
+          </button>
+
+          <!-- Send button -->
+          <button class="send-button" id="sendBtn" title="Send message" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const micBtn = document.getElementById('micBtn');
+    const micIcon = document.getElementById('micIcon');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatInput = document.getElementById('chatInput');
+    const recordingOverlay = document.getElementById('recordingOverlay');
+    const recordingOverlayText = document.getElementById('recordingOverlayText');
+    const recordingTimer = document.getElementById('recordingTimer');
+    const chatInner = document.getElementById('chatInner');
+    const heroState = document.getElementById('heroState');
+    const chatView = document.getElementById('chatView');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let timerInterval = null;
+    let recordStartTime = 0;
+    let lastDetectedLang = null;
+
+    // Auto resize textarea
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+      sendBtn.disabled = chatInput.value.trim().length === 0;
+    });
+
+    // Enter key to send
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      heroState.classList.add('hidden');
+
+      appendUserTextMessage(text);
+      appendWhisperTextMessage(text, lastDetectedLang);
+
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+      sendBtn.disabled = true;
+      lastDetectedLang = null;
+      chatView.scrollTop = chatView.scrollHeight;
+    }
+
+    function appendUserTextMessage(text) {
+      const row = document.createElement('div');
+      row.className = 'message-row';
+      row.innerHTML = `
+        <div class="message-avatar avatar-user">You</div>
+        <div class="message-content">
+          <div class="message-role">You</div>
+          <div class="message-bubble message-user-bubble">
+            <p>${escapeHtml(text)}</p>
+          </div>
+        </div>
+      `;
+      chatInner.appendChild(row);
+    }
+
+    function appendWhisperTextMessage(text, langInfo) {
+      const row = document.createElement('div');
+      row.className = 'message-row';
+      const langBadge = langInfo && langInfo.name ? `<span class="lang-tag">🌐 ${langInfo.name}</span>` : '';
+
+      row.innerHTML = `
+        <div class="message-avatar avatar-whisper">W</div>
+        <div class="message-content">
+          <div class="message-role">Whisper AI ${langBadge}</div>
+          <div class="message-bubble">
+            <p>${escapeHtml(text)}</p>
+            <div class="action-row">
+              <button class="action-btn" onclick="copyToClipboard('${escapeJs(text)}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+              </button>
+              <button class="action-btn" onclick="speakText('${escapeJs(text)}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                Read Aloud
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      chatInner.appendChild(row);
+    }
+
+    newChatBtn.addEventListener('click', () => {
+      chatInner.innerHTML = '';
+      chatInner.appendChild(heroState);
+      heroState.classList.remove('hidden');
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+      sendBtn.disabled = true;
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      uploadAudioFile(file);
+      fileInput.value = '';
+    });
+
+    micBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            sampleRate: 16000,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        audioChunks = [];
+        const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : '';
+        mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 128000 }) : new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(track => track.stop());
+          if (audioChunks.length === 0) {
+            recordingOverlay.classList.add('hidden');
+            setLoading(false);
+            return;
+          }
+          const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          await transcribeIntoInput(audioBlob);
+        };
+
+        mediaRecorder.start(250);
+        isRecording = true;
+        micBtn.classList.add('recording');
+        recordingOverlay.classList.remove('hidden');
+        recordingOverlayText.innerText = '🔴 Listening... Speak now in English, Gujarati, Hindi, or any language!';
+        recordStartTime = Date.now();
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 500);
+
+      } catch (err) {
+        alert('Could not access microphone: ' + err.message + '\nPlease allow microphone access in your browser.');
+      }
+    }
+
+    function stopRecording() {
+      if (!mediaRecorder || !isRecording) return;
+      isRecording = false;
+      clearInterval(timerInterval);
+      micBtn.classList.remove('recording');
+      recordingOverlayText.innerText = '⏳ Auto-detecting & transcribing speech...';
+
+      if (mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.requestData();
+        } catch (e) {}
+        mediaRecorder.stop();
+      }
+    }
+
+    function updateTimer() {
+      const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+      const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const secs = String(elapsed % 60).padStart(2, '0');
+      recordingTimer.innerText = `${mins}:${secs}`;
+    }
+
+    async function transcribeIntoInput(audioBlob) {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'speech.webm');
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      try {
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+        if (data.success && data.text) {
+          lastDetectedLang = {
+            code: data.language,
+            name: data.language_name
+          };
+          typeIntoInput(data.text);
+        } else if (data.success && !data.text) {
+          alert('No speech detected. Please speak clearly into your microphone.');
+        } else {
+          alert('Notice: ' + (data.error || 'Could not detect speech'));
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Transcription error:', err);
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        recordingOverlay.classList.add('hidden');
+        setLoading(false);
+      }
+    }
+
+    async function uploadAudioFile(file) {
+      recordingOverlay.classList.remove('hidden');
+      recordingOverlayText.innerText = `⏳ Transcribing ${file.name}...`;
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append('audio', file);
+
+      try {
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.success && data.text) {
+          lastDetectedLang = {
+            code: data.language,
+            name: data.language_name
+          };
+          typeIntoInput(data.text);
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Server error: ' + err.message);
+      } finally {
+        recordingOverlay.classList.add('hidden');
+        setLoading(false);
+      }
+    }
+
+    // Typewriter effect into the chat input box
+    function typeIntoInput(fullText) {
+      const existing = chatInput.value ? chatInput.value.trim() + ' ' : '';
+      let index = 0;
+      chatInput.focus();
+      sendBtn.disabled = false;
+
+      const interval = setInterval(() => {
+        if (index < fullText.length) {
+          chatInput.value = existing + fullText.substring(0, index + 1);
+          chatInput.style.height = 'auto';
+          chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+          index++;
+        } else {
+          clearInterval(interval);
+          chatInput.focus();
+          chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+        }
+      }, 15);
+    }
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        micIcon.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        micBtn.disabled = true;
+      } else {
+        micIcon.classList.remove('hidden');
+        loadingSpinner.classList.add('hidden');
+        micBtn.disabled = false;
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function escapeJs(str) {
+      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+    }
+  </script>
+</body>
+</html>

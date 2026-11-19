@@ -116,9 +116,10 @@ class MultiHeadAttention(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         n_batch, n_ctx, n_state = q.shape
         scale = (n_state // self.n_head) ** -0.25
-        q = q.view(*q.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
-        k = k.view(*k.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
-        v = v.view(*v.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
+        head_dim = n_state // self.n_head
+        q = q.view(*q.shape[:2], self.n_head, head_dim).permute(0, 2, 1, 3)
+        k = k.view(*k.shape[:2], self.n_head, head_dim).permute(0, 2, 1, 3)
+        v = v.view(*v.shape[:2], self.n_head, head_dim).permute(0, 2, 1, 3)
 
         if SDPA_AVAILABLE and MultiHeadAttention.use_sdpa:
             if k.shape[0] == 1 and q.shape[0] != 1:

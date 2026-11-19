@@ -5,7 +5,24 @@ __pycache__/
 .pytest_cache
 .ipynb_checkpoints
 
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Binaries
+ffmpeg.exe
+ffprobe.exe
+
+# Model weights
+*.pt
+
+# Temp files
+temp_voice.wav
+*.tmp
+
+# OS & IDE
 thumbs.db
 .DS_Store
 .idea
-
+.vscode/
